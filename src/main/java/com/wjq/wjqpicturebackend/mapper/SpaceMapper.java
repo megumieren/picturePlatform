@@ -1,7 +1,7 @@
 package com.wjq.wjqpicturebackend.mapper;
 
-import generator.domain.Space;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.wjq.wjqpicturebackend.model.domain.Space;
 
 /**
 * @author wjq23

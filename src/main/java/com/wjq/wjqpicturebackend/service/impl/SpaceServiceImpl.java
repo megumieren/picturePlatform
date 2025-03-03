@@ -1,7 +1,7 @@
 package com.wjq.wjqpicturebackend.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import generator.domain.Space;
+import com.wjq.wjqpicturebackend.model.domain.Space;
 import com.wjq.wjqpicturebackend.service.SpaceService;
 import com.wjq.wjqpicturebackend.mapper.SpaceMapper;
 import org.springframework.stereotype.Service;

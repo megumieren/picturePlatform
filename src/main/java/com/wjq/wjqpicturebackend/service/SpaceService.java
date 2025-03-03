@@ -1,7 +1,7 @@
 package com.wjq.wjqpicturebackend.service;
 
-import generator.domain.Space;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.wjq.wjqpicturebackend.model.domain.Space;
 
 /**
 * @author wjq23
