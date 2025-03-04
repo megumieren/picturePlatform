@@ -5,10 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.wjq.wjqpicturebackend.model.domain.Picture;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.wjq.wjqpicturebackend.model.domain.User;
-import com.wjq.wjqpicturebackend.model.dto.picture.PictureQueryRequest;
-import com.wjq.wjqpicturebackend.model.dto.picture.PictureReviewRequest;
-import com.wjq.wjqpicturebackend.model.dto.picture.PictureUploadByBatchRequest;
-import com.wjq.wjqpicturebackend.model.dto.picture.PictureUploadRequest;
+import com.wjq.wjqpicturebackend.model.dto.picture.*;
 import com.wjq.wjqpicturebackend.model.vo.PictureVO;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -81,4 +78,10 @@ public interface PictureService extends IService<Picture> {
      * 批量抓取和创建图片
      */
     Integer uploadPictureByBatch(PictureUploadByBatchRequest pictureUploadByBatchRequest, User loginUser);
+
+    void deletePicture(long pictureId, User loginUser);
+
+    void checkPictureAuth(User loginUser, Picture picture);
+
+    void editPicture(PictureEditRequest pictureEditRequest, User loginUser);
 }

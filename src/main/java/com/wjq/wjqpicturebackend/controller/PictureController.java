@@ -15,12 +15,14 @@ import com.wjq.wjqpicturebackend.exception.BusinessException;
 import com.wjq.wjqpicturebackend.exception.ErrorCode;
 import com.wjq.wjqpicturebackend.exception.ThrowUtils;
 import com.wjq.wjqpicturebackend.model.domain.Picture;
+import com.wjq.wjqpicturebackend.model.domain.Space;
 import com.wjq.wjqpicturebackend.model.domain.User;
 import com.wjq.wjqpicturebackend.model.dto.picture.*;
 import com.wjq.wjqpicturebackend.model.enums.PictureReviewStatusEnum;
 import com.wjq.wjqpicturebackend.model.vo.PictureTagCategory;
 import com.wjq.wjqpicturebackend.model.vo.PictureVO;
 import com.wjq.wjqpicturebackend.service.PictureService;
+import com.wjq.wjqpicturebackend.service.SpaceService;
 import com.wjq.wjqpicturebackend.service.UserService;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.DigestUtils;
@@ -45,6 +47,9 @@ public class PictureController {
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private SpaceService spaceService;
 
     //构造本地缓存（在jvm中）
     private final Cache<String, String> LOCAL_CACHE =
@@ -95,16 +100,8 @@ public class PictureController {
                                                HttpServletRequest request) {
         ThrowUtils.throwIf(deleteRequest == null || deleteRequest.getId() <= 0, ErrorCode.PARAMS_ERROR);
         User user = userService.getLoginUser(request);
-        Long userId = user.getId();
         Long pictureId = deleteRequest.getId();
-        Picture picture = pictureService.getById(pictureId);
-        ThrowUtils.throwIf(picture == null, ErrorCode.NOT_FOUND_ERROR);
-        //仅本人和管理员可以删除
-        if (!picture.getUserId().equals(userId) && !userService.isAdmin(user)) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
-        boolean isDelete = pictureService.removeById(pictureId);
-        ThrowUtils.throwIf(!isDelete, ErrorCode.OPERATION_ERROR, "删除失败");
+        pictureService.deletePicture(pictureId,user);
         return ResultUtils.success(true);
     }
 
@@ -148,28 +145,7 @@ public class PictureController {
     @PostMapping("/edit")
     public BaseResponse<Boolean> editPicture(@RequestBody PictureEditRequest pictureEditRequest, HttpServletRequest httpServletRequest) {
         ThrowUtils.throwIf(pictureEditRequest == null || pictureEditRequest.getId() <= 0, ErrorCode.PARAMS_ERROR);
-        Picture picture = new Picture();
-        BeanUtil.copyProperties(pictureEditRequest, picture);
-        picture.setTags(JSONUtil.toJsonStr(pictureEditRequest.getTags()));
-        //设置编辑时间
-        picture.setEditTime(new Date());
-        //检验合法性
-        pictureService.validPicture(picture);
-        //判断数据库中是否存在对应id图片
-        Long pictureId = pictureEditRequest.getId();
-        Picture oldPicture = pictureService.getById(pictureId);
-        ThrowUtils.throwIf(oldPicture == null, ErrorCode.NOT_FOUND_ERROR);
-
-        User loginUser = userService.getLoginUser(httpServletRequest);
-        //仅管理员和普通用户可以编辑
-        if (!oldPicture.getUserId().equals(loginUser.getId()) && !userService.isAdmin(loginUser)) {
-            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
-        }
-        //补充审核参数
-        pictureService.fillReviewParams(picture,loginUser);
-
-        boolean isUpdate = pictureService.updateById(picture);
-        ThrowUtils.throwIf(!isUpdate, ErrorCode.OPERATION_ERROR, "更新图片失败");
+        pictureService.editPicture(pictureEditRequest,userService.getLoginUser(httpServletRequest));
         return ResultUtils.success(true);
     }
 
@@ -207,6 +183,12 @@ public class PictureController {
         // 查询数据库
         Picture picture = pictureService.getOne(pictureService.getQueryWrapper(pictureQueryRequest));
         ThrowUtils.throwIf(picture == null, ErrorCode.NOT_FOUND_ERROR);
+        // 空间权限校验
+        Long spaceId = picture.getSpaceId();
+        if(spaceId != null) {
+            User loginUser = userService.getLoginUser(request);
+            pictureService.checkPictureAuth(loginUser,picture);
+        }
         // 获取封装类
         return ResultUtils.success(pictureService.getPictureVO(picture, request));
     }
@@ -233,7 +215,22 @@ public class PictureController {
         // 限制爬虫
         ThrowUtils.throwIf(pictureQueryRequest.getPageSize() > 20, ErrorCode.PARAMS_ERROR,"单页显示图片量超上限");
         Page<Picture> picturePage = new Page<>(pictureQueryRequest.getCurrent(), pictureQueryRequest.getPageSize());
-        pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+        // 空间权限校验
+        Long spaceId = pictureQueryRequest.getSpaceId();
+        // 公开图库
+        if (spaceId == null) {
+            // 普通用户默认只能查看已过审的公开数据
+            pictureQueryRequest.setReviewStatus(PictureReviewStatusEnum.PASS.getValue());
+            pictureQueryRequest.setNullSpaceId(true);
+        } else {
+            // 私有空间
+            User loginUser = userService.getLoginUser(request);
+            Space space = spaceService.getById(spaceId);
+            ThrowUtils.throwIf(space == null, ErrorCode.NOT_FOUND_ERROR, "空间不存在");
+            if (!loginUser.getId().equals(space.getUserId())) {
+                throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "没有空间权限");
+            }
+        }
         pictureService.page(picturePage, pictureService.getQueryWrapper(pictureQueryRequest));
         Page<PictureVO> pictureVOPage = pictureService.getPictureVOPage(picturePage, request);
         return ResultUtils.success(pictureVOPage);

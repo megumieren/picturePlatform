@@ -9,11 +9,14 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.wjq.wjqpicturebackend.constant.UserConstant;
 import com.wjq.wjqpicturebackend.exception.BusinessException;
 import com.wjq.wjqpicturebackend.exception.ErrorCode;
+import com.wjq.wjqpicturebackend.exception.ThrowUtils;
 import com.wjq.wjqpicturebackend.model.domain.User;
+import com.wjq.wjqpicturebackend.model.dto.space.SpaceAddRequest;
 import com.wjq.wjqpicturebackend.model.dto.user.UserQueryRequest;
 import com.wjq.wjqpicturebackend.model.enums.UserRoleEnum;
 import com.wjq.wjqpicturebackend.model.vo.LoginUserVO;
 import com.wjq.wjqpicturebackend.model.vo.UserVO;
+import com.wjq.wjqpicturebackend.service.SpaceService;
 import com.wjq.wjqpicturebackend.service.UserService;
 import com.wjq.wjqpicturebackend.mapper.UserMapper;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -36,7 +39,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         implements UserService {
 
     @Resource
-    private StringRedisTemplate stringRedisTemplate;
+    private SpaceService spaceService;
 
     @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword) {
@@ -73,6 +76,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if(!saveResult){
             throw new BusinessException(ErrorCode.SYSTEM_ERROR,"注册失败，数据库错误");
         }
+        //注册成功，自动为用户创建空间
+        Long spaceId = spaceService.addSpace(new SpaceAddRequest(), user);
+        ThrowUtils.throwIf(spaceId == null,ErrorCode.OPERATION_ERROR,"自动创建空间失败，请手动创建");
 
         return user.getId();
     }
