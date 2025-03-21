@@ -11,7 +11,7 @@
         </a-layout-content>
       </a-layout>
       <a-layout-footer class="footer">
-        <a href="https://github.com/megumieren/picturePlatform/tree/master" target="_blank"> Ersami </a>
+        <a href="https://github.com/megumieren/picturePlatform" target="_blank"> Ersami </a>
       </a-layout-footer>
     </a-layout>
   </div>
