@@ -1,0 +1,41 @@
+# 线上配置文件
+server:
+  port: 8123
+spring:
+  # 数据库配置
+  # todo 需替换配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://119.45.173.104:3306/wjq_picture
+    username: wjq_picture_root
+    password: wjq_picture_wjq
+  # Redis 配置
+  # todo 需替换配置
+  redis:
+    database: 0
+    host: 119.45.173.104
+    port: 6379
+    timeout: 5000
+    password: wjq
+mybatis-plus:
+  configuration:
+    # 生产环境关闭日志
+    log-impl: ''
+# 接口文档配置
+knife4j:
+  basic:
+    enable: true
+    username: root
+    password: wjq
+# 对象存储配置（需要从腾讯云获取）
+cos:
+  client:
+    host: https://wjq-picture-1344614417.cos.ap-nanjing.myqcloud.com  #域名
+    secretId: AKID612tfQE4jAOOAtPhkZAWefU5SaUAboum
+    secretKey: g7LL8g06zd3FCvPfiX7SZT9aorgGZ1HQ
+    region: ap-nanjing   #地域名
+    bucket: wjq-picture-1344614417  #存储桶名
+
+# 阿里云 AI 配置
+aliYunAi:
+  apiKey: sk-81ceccba54dc4dc4b9175116ef13f5e9
