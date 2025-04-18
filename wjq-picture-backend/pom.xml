@@ -175,7 +175,6 @@
                 <version>${spring-boot.version}</version>
                 <configuration>
                     <mainClass>com.wjq.wjqpicturebackend.WjqPictureBackendApplication</mainClass>
-                    <skip>true</skip>
                 </configuration>
                 <executions>
                     <execution>

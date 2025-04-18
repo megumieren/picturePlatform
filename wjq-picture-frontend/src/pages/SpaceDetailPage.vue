@@ -13,7 +13,7 @@
           + 创建图片
         </a-button>
         <a-button
-          v-if="canManageSpaceUser"
+          v-if="canManageSpaceUser && SPACE_TYPE_MAP[space.spaceType] === '团队空间'"
           type="primary"
           ghost
           :icon="h(TeamOutlined)"
