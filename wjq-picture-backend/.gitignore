@@ -1,6 +1,7 @@
 ###Custom###
 application-local.yml
 /logs/
+application-prod.yml
 
 HELP.md
 target/
